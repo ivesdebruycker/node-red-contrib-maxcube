@@ -1,38 +1,28 @@
 <script type="text/javascript">
-  RED.nodes.registerType('maxcube',{
+  RED.nodes.registerType('maxcube in',{
     category: 'output',
     color: '#F3B567',
     defaults: {
-      name: { value:"" },
-      ip: { value:"", required:true },
-      port: { value: 62910, required:true }
+      server: { value: '', type: 'maxcube-server' }
     },
     inputs: 1,
     outputs: 0,
-    icon: "bridge.png",
+    icon: 'bridge.png',
     label: function() {
-      return this.name || "Maxcube";
+      return this.name || 'Maxcube';
     },
     align: 'right'
   });
 </script>
 
-<script type="text/x-red" data-template-name="maxcube">
+<script type="text/x-red" data-template-name="maxcube in">
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
-    </div>
-    <div class="form-row">
-        <label for="node-input-ip"><i class="icon-tag"></i> Ip</label>
-        <input type="text" id="node-input-ip" placeholder="ip">
-    </div>
-    <div class="form-row">
-        <label for="node-input-port"><i class="icon-tag"></i> Port</label>
-        <input type="text" id="node-input-port" placeholder="port">
+        <label for="node-input-server"><i class="icon-tag"></i> Server</label>
+        <input type="text" id="node-input-server">
     </div>
 </script>
 
-<script type="text/x-red" data-help-name="maxcube">
+<script type="text/x-red" data-help-name="maxcube in">
     <p>A node to control the eQ-3 Max! Cube</p>
     <p>Accepts messages with payload of type object with following structure: 
       <pre>{
@@ -40,4 +30,74 @@
   "degrees": 20
 }</pre>
     </p>
+</script>
+
+
+<script type="text/javascript">
+  RED.nodes.registerType('maxcube out',{
+    category: 'input',
+    color: '#F3B567',
+    defaults: {
+      server: { value: '', type: 'maxcube-server' }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'bridge.png',
+    label: function() {
+      return this.name || 'Maxcube';
+    },
+    align: 'left'
+  });
+</script>
+
+<script type="text/x-red" data-template-name="maxcube out">
+    <div class="form-row">
+        <label for="node-input-server"><i class="icon-tag"></i> Server</label>
+        <input type="text" id="node-input-server">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="maxcube out">
+    <p>A node to query the eQ-3 Max! Cube</p>
+    <p>Whenever an input is received, device status is updated from the Maxcube, and sent as separate messages (one for each device) of form:
+      <pre>{ "rf_address": "0abc12",
+  "initialized": true,
+  "fromCmd": false,
+  "error": false,
+  "valid": true,
+  "mode": "MANUAL",
+  "dst_active": true,
+  "gateway_known": true,
+  "panel_locked": false,
+  "link_error": false,
+  "battery_low": false,
+  "valve": 0,
+  "setpoint": 5,
+  "temp": 15.4
+}</pre></p>
+</script>
+
+
+<script type="text/javascript">
+  RED.nodes.registerType('maxcube-server',{
+    category: 'config',
+    defaults: {
+      host: { value:'', required: true },
+      port: { value: 62910, required: true, validate: RED.validators.number() }
+    },
+    label: function() {
+      return this.host + ':' + this.port;
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="maxcube-server">
+    <div class="form-row">
+        <label for="node-config-input-host"><i class="icon-tag"></i> Host</label>
+        <input type="text" id="node-config-input-host" placeholder="host">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-port"><i class="icon-tag"></i> Port</label>
+        <input type="text" id="node-config-input-port" placeholder="port">
+    </div>
 </script>
