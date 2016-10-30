@@ -1,13 +1,13 @@
 {
     "name"         : "node-red-contrib-maxcube",
-    "version"      : "0.0.2",
+    "version"      : "0.0.3",
     "description"  : "A node-red node to control the eQ-3 Max! Cube",
     "dependencies": {
     },
     "keywords": [ "node-red" ],
     "node-red"     : {
         "nodes": {
-            "maxcube: maxcube.js"
+            "maxcube": "maxcube.js"
         }
     }
 }
