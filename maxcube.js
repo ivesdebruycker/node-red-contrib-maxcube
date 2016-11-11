@@ -22,12 +22,14 @@ module.exports = function(RED) {
     });
 
     node.on('input', function(msg) {
-      node.maxCube.setTemperature(msg.payload.rf_address, msg.payload.degrees).then(function (success) {
+      node.maxCube.setTemperature(msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate).then(function (success) {
         if (success) {
-          node.log('Temperature set');
+          node.log('Temperature set (' + [msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate].filter(function (val) {return val;}).join(', ') + ')');
         } else {
           node.log('Error setting temperature');
         }
+      }).catch(function(e) {
+        node.warn(e);
       });
     });
   }
@@ -54,6 +56,7 @@ module.exports = function(RED) {
     });
 
     node.on('input', function(msg) {
+      node.log(JSON.stringify(node.maxCube.getCommStatus()));
       node.maxCube.getDeviceStatus().then(function (payload) {
         // send devices statuses as separate messages
         node.send([payload.map(function function_name(deviceStatus) { return { rf_address: deviceStatus.rf_address, payload: deviceStatus }; })]);

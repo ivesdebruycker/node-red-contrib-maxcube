@@ -1,13 +1,13 @@
 {
   "name": "node-red-contrib-maxcube",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A node-red node to control the eQ-3 Max! Cube",
   "repository": {
     "type": "git",
     "url": "git://github.com/ivesdebruycker/node-red-contrib-maxcube.git"
   },
   "dependencies": {
-    "maxcube": "^1.0.1"
+    "maxcube": "^1.0.2"
   },
   "keywords": [
     "node-red",
