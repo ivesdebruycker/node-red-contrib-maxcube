@@ -17,7 +17,7 @@
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/ivesdebruycker/node-red-contrib-maxcube/issues"
-  }
+  },
   "node-red": {
     "nodes": {
       "maxcube": "maxcube.js"
