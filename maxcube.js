@@ -59,7 +59,15 @@ module.exports = function(RED) {
       node.log(JSON.stringify(node.maxCube.getCommStatus()));
       node.maxCube.getDeviceStatus().then(function (payload) {
         // send devices statuses as separate messages
-        node.send([payload.map(function function_name(deviceStatus) { return { rf_address: deviceStatus.rf_address, payload: deviceStatus }; })]);
+        node.send([payload.map(function function_name(deviceStatus) {
+            // add device name, room name, to status object
+            var deviceInfo = node.maxCube.getDeviceInfo(deviceStatus.rf_address);
+            if(deviceInfo!==undefined){
+              deviceStatus.device_name = deviceInfo.device_name;
+              deviceStatus.room_name = deviceInfo.room_name;
+            }
+           return { rf_address: deviceStatus.rf_address, payload: deviceStatus };
+         })]);
       });
     });
   }
