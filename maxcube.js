@@ -1,6 +1,19 @@
 var MaxCube = require('maxcube');
 
 module.exports = function(RED) {
+
+  function statusEvents(node){
+    if(node.maxCube){
+      node.maxCube.on('closed', function () {
+        node.status({fill:"red",shape:"ring",text:"disconnected"});
+      });
+
+      node.maxCube.on('connected', function () {
+        node.status({fill:"green",shape:"dot",text:"connected"});
+      });
+    }
+  }
+
   function MaxcubeNodeIn(config) {
     var node = this;
     RED.nodes.createNode(this, config);
@@ -12,16 +25,21 @@ module.exports = function(RED) {
     }
 
     node.maxCube = this.serverConfig.maxCube;
-
-    node.maxCube.on('closed', function () {
-      node.status({fill:"red",shape:"ring",text:"disconnected"});
-    });
-
-    node.maxCube.on('connected', function () {
-      node.status({fill:"green",shape:"dot",text:"connected"});
-    });
+    statusEvents(node);
 
     node.on('input', function(msg) {
+      //temporary disabled by settings
+      if(this.serverConfig.disabled ){
+          node.status({fill:"yellow",shape:"dot",text:"disabled"});
+          node.warn("maxcube "+this.serverConfig.host+" disabled");
+          //close existing
+          if(node.maxCube){
+            node.warn("closing exising connection: "+this.serverConfig.host);
+            node.maxCube.close();
+          }
+          return;
+      }
+
       node.maxCube.setTemperature(msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate).then(function (success) {
         if (success) {
           node.log('Temperature set (' + [msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate].filter(function (val) {return val;}).join(', ') + ')');
@@ -46,16 +64,21 @@ module.exports = function(RED) {
     }
 
     node.maxCube = this.serverConfig.maxCube;
-
-    node.maxCube.on('closed', function () {
-      node.status({fill:"red",shape:"ring",text:"disconnected"});
-    });
-
-    node.maxCube.on('connected', function () {
-      node.status({fill:"green",shape:"dot",text:"connected"});
-    });
+    statusEvents(node);
 
     node.on('input', function(msg) {
+      //temporary disabled by settings
+      if(this.serverConfig.disabled ){
+          node.status({fill:"yellow",shape:"dot",text:"disabled"});
+          node.warn("maxcube "+this.serverConfig.host+" disabled");
+          //close existing
+          if(node.maxCube){
+            node.warn("closing exising connection: "+this.serverConfig.host);
+            node.maxCube.close();
+          }
+          return;
+      }
+
       node.log(JSON.stringify(node.maxCube.getCommStatus()));
       node.maxCube.getDeviceStatus().then(function (payload) {
         // send devices statuses as separate messages
@@ -79,8 +102,9 @@ module.exports = function(RED) {
 
     this.host = config.host;
     this.port = config.port;
+    this.disabled = config.disabled;
 
-    if (!node.host || !node.port) {
+    if (this.disabled || !node.host || !node.port) {
       return;
     }
 
