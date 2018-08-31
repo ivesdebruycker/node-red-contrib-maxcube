@@ -7,7 +7,8 @@ node-red-contrib-maxcube2 is a fork of https://github.com/ivesdebruycker/node-re
 
 ### Changes from node-red-contrib-maxcube
 - Settings to temporary disable maxcube connection (the cube can handle only one TCP connection at a time, since maxcube/maxcube2 use a permanent connection if you want to temporary use another client you have to stop node-red...now you can disable in node settings)
-- I'm planning to expose some additional data provided by maxcube2 (device configurations, min/max/eco/comfort temperatures etc.)
+- Node to query devices configurations
+- I'm planning add some additional features provided by maxcube2 (schedule, etc)
 
 The old API didn't change currently so it's a drop-in replacement.
 
