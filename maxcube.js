@@ -102,6 +102,36 @@ module.exports = function(RED) {
   }
   RED.nodes.registerType("maxcube out", MaxcubeNodeOut);
 
+
+  function MaxcubeDeviceConfigNodeOut(config) {
+    var node = this;
+    if(!initNode(node, config)){
+      return;
+    }
+
+    node.on('input', function(msg) {
+      if(checkInputDisabled(node)){
+        return;
+      };
+
+      var maxCube = node.serverConfig.maxCube;
+      node.log(JSON.stringify(maxCube.getCommStatus()));
+      maxCube.getDeviceStatus().then(function (devices) {
+
+        // add every single device to the payload
+        var devicesConfig = {};
+        for (var i = 0; i < devices.length; i++) {
+          var deviceStatus = devices[i];
+          var conf = maxCube.getDeviceConfiguration(deviceStatus.rf_address);
+          devicesConfig[deviceStatus.rf_address] = conf;
+        }
+        node.send({payload: devicesConfig});
+      });
+    });
+  }
+  RED.nodes.registerType("maxcube device config", MaxcubeDeviceConfigNodeOut);
+
+
   function MaxcubeServerNode(config) {
     var node = this;
     RED.nodes.createNode(this, config);

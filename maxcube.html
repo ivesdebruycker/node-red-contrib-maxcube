@@ -24,7 +24,7 @@
 
 <script type="text/x-red" data-help-name="maxcube in">
     <p>A node to control the eQ-3 Max! Cube</p>
-    <p>Accepts messages with payload of type object with following structure: 
+    <p>Accepts messages with payload of type object with following structure:
       <pre>{
   "rf_address": "0abc12",
   "degrees": 20,
@@ -77,6 +77,63 @@
   "temp": 15.4
 }</pre></p>
 </script>
+
+<script type="text/javascript">
+  RED.nodes.registerType('maxcube device config',{
+    category: 'input',
+    color: '#F3B567',
+    defaults: {
+      server: { value: '', type: 'maxcube-server' }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'bridge.png',
+    label: function() {
+      return this.name || 'Maxcube configuration';
+    },
+    align: 'left'
+  });
+</script>
+
+<script type="text/x-red" data-template-name="maxcube device config">
+    <div class="form-row">
+        <label for="node-input-server"><i class="icon-tag"></i> Server</label>
+        <input type="text" id="node-input-server">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="maxcube device config">
+    <p>A node to query the eQ-3 Max! Cube devices configuration</p>
+    <p>Whenever an input is received, devices configuration is updated from the Maxcube, and send it as single message of form:
+      <pre>
+      {
+         "18b444":{
+            "rf_address":"18b444",
+            "device_type":1,
+            "serial_number":"OEQ1131666",
+            "comfort_temp":21.5,
+            "eco_temp":16.5,
+            "max_setpoint_temp":30,
+            "min_setpoint_temp":4.5,
+            "temp_offset":0,
+            "max_valve":100
+         },
+         "1709a1":{
+            "rf_address":"1709a1",
+            "device_type":1,
+            "serial_number":"NKF0004984",
+            "comfort_temp":21.5,
+            "eco_temp":16.5,
+            "max_setpoint_temp":30,
+            "min_setpoint_temp":4.5,
+            "temp_offset":0,
+            "max_valve":100
+         }
+      }
+      </pre>
+    </p>
+</script>
+
 
 
 <script type="text/javascript">
