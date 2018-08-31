@@ -60,15 +60,45 @@ module.exports = function(RED) {
       };
 
       var maxCube = node.serverConfig.maxCube;
-      maxCube.setTemperature(msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate).then(function (success) {
-        if (success) {
-          node.log('Temperature set (' + [msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate].filter(function (val) {return val;}).join(', ') + ')');
-        } else {
-          node.log('Error setting temperature');
-        }
-      }).catch(function(e) {
-        node.warn(e);
-      });
+
+      var setTemp = function(rf_address, degrees, mode, untilDate){
+        maxCube.setTemperature(rf_address, degrees, mode, untilDate).then(function (success) {
+          if (success) {
+            node.log('Temperature set (' + [rf_address, degrees, mode, untilDate].filter(function (val) {return val;}).join(', ') + ')');
+          } else {
+            node.log('Error setting temperature');
+          }
+        }).catch(function(e) {
+          node.warn(e);
+        });
+      }
+
+      var devices = [];
+      //specific device
+      if(msg.payload.rf_address){
+        setTemp(msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate);
+      }else{
+        //all devices: query getDeviceStatus, then update all!
+        maxCube.getDeviceStatus().then(function (devices) {
+          for (var i = 0; i < devices.length; i++) {
+            var deviceStatus = devices[i];
+            //ignoring eco buttons/window switch/etc
+            // cube	0
+            // radiator thermostat	1
+            // radiator thermostat plus	2
+            // wall thermostat	3
+            // shutter contact	4
+            // eco button	5
+            // unknown	6
+            var deviceInfo = maxCube.getDeviceInfo(deviceStatus.rf_address);
+            if(deviceInfo.device_type == '1' || deviceInfo.device_type == '2' || deviceInfo.device_type == '3'){
+              setTemp(deviceStatus.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate);
+            }else{
+              node.warn("Ignoring device "+deviceStatus.rf_address + "(device_type "+deviceInfo.device_type+")");
+            }
+          }
+        });
+      }
     });
   }
   RED.nodes.registerType("maxcube in", MaxcubeNodeIn);
