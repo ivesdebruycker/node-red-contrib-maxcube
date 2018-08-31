@@ -2,45 +2,65 @@ var MaxCube = require('maxcube');
 
 module.exports = function(RED) {
 
-  function statusEvents(node){
-    if(node.maxCube){
-      node.maxCube.on('closed', function () {
+  //missing configurations
+  function initNode(node, config){
+    //create node
+    RED.nodes.createNode(node, config);
+    //check configurations
+    node.serverConfig = RED.nodes.getNode(config.server);
+    if (!node.serverConfig) {
+      return false;
+    }
+
+    //handle status icons
+    var maxCube = node.serverConfig.maxCube;
+    if(maxCube){
+      maxCube.on('closed', function () {
         node.status({fill:"red",shape:"ring",text:"disconnected"});
       });
 
-      node.maxCube.on('connected', function () {
+      maxCube.on('connected', function () {
         node.status({fill:"green",shape:"dot",text:"connected"});
       });
     }
+
+    return true;
+  }
+
+  function checkInputDisabled(node){
+    var serverConfig = node.serverConfig;
+    //temporary disabled by settings
+    if(serverConfig.disabled){
+        node.status({fill:"yellow",shape:"dot",text:"disabled"});
+        node.warn("maxcube "+serverConfig.host+" disabled");
+        //close existing
+        if(serverConfig.maxCube){
+          node.warn("closing exising connection: "+serverConfig.host);
+          serverConfig.maxCube.close();
+        }
+        return true;
+    }
+
+    if(!serverConfig.maxCube){
+      node.warn("maxCube item is not ready");
+      node.status({fill:"red",shape:"ring",text:"error"});
+    }
+    return false;
   }
 
   function MaxcubeNodeIn(config) {
     var node = this;
-    RED.nodes.createNode(this, config);
-
-    this.serverConfig = RED.nodes.getNode(config.server);
-
-    if (!this.serverConfig) {
+    if(!initNode(node, config)){
       return;
     }
 
-    node.maxCube = this.serverConfig.maxCube;
-    statusEvents(node);
-
     node.on('input', function(msg) {
-      //temporary disabled by settings
-      if(this.serverConfig.disabled ){
-          node.status({fill:"yellow",shape:"dot",text:"disabled"});
-          node.warn("maxcube "+this.serverConfig.host+" disabled");
-          //close existing
-          if(node.maxCube){
-            node.warn("closing exising connection: "+this.serverConfig.host);
-            node.maxCube.close();
-          }
-          return;
-      }
+      if(checkInputDisabled(node)){
+        return;
+      };
 
-      node.maxCube.setTemperature(msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate).then(function (success) {
+      var maxCube = node.serverConfig.maxCube;
+      maxCube.setTemperature(msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate).then(function (success) {
         if (success) {
           node.log('Temperature set (' + [msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate].filter(function (val) {return val;}).join(', ') + ')');
         } else {
@@ -55,36 +75,22 @@ module.exports = function(RED) {
 
   function MaxcubeNodeOut(config) {
     var node = this;
-    RED.nodes.createNode(this, config);
-
-    this.serverConfig = RED.nodes.getNode(config.server);
-
-    if (!this.serverConfig) {
+    if(!initNode(node, config)){
       return;
     }
 
-    node.maxCube = this.serverConfig.maxCube;
-    statusEvents(node);
-
     node.on('input', function(msg) {
-      //temporary disabled by settings
-      if(this.serverConfig.disabled ){
-          node.status({fill:"yellow",shape:"dot",text:"disabled"});
-          node.warn("maxcube "+this.serverConfig.host+" disabled");
-          //close existing
-          if(node.maxCube){
-            node.warn("closing exising connection: "+this.serverConfig.host);
-            node.maxCube.close();
-          }
-          return;
-      }
+      if(checkInputDisabled(node)){
+        return;
+      };
 
-      node.log(JSON.stringify(node.maxCube.getCommStatus()));
-      node.maxCube.getDeviceStatus().then(function (payload) {
+      var maxCube = node.serverConfig.maxCube;
+      node.log(JSON.stringify(maxCube.getCommStatus()));
+      maxCube.getDeviceStatus().then(function (payload) {
         // send devices statuses as separate messages
         node.send([payload.map(function function_name(deviceStatus) {
             // add device name, room name, to status object
-            var deviceInfo = node.maxCube.getDeviceInfo(deviceStatus.rf_address);
+            var deviceInfo = maxCube.getDeviceInfo(deviceStatus.rf_address);
             if(deviceInfo!==undefined){
               deviceStatus.device_name = deviceInfo.device_name;
               deviceStatus.room_name = deviceInfo.room_name;
