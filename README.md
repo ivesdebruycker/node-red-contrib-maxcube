@@ -8,6 +8,7 @@ node-red-contrib-maxcube2 is a fork of https://github.com/ivesdebruycker/node-re
 ### Changes from node-red-contrib-maxcube
 - Settings to temporary disable maxcube connection (the cube can handle only one TCP connection at a time, since maxcube/maxcube2 use a permanent connection if you want to temporary use another client you have to stop node-red...now you can disable in node settings)
 - Node to query devices configurations
+- Set mode to all devices with a single payload ({"mode" : "AUTO"} without rf_address)
 - I'm planning add some additional features provided by maxcube2 (schedule, etc)
 
 The old API didn't change currently so it's a drop-in replacement.
@@ -53,10 +54,32 @@ A node to set the temperature and/or the mode of a device.
 Valid modes are "AUTO", "MANUAL" and "BOOST".
 
 Accepts messages with payload of type object with following structure:
+
+MANUAL on specific device
 ```
 {
   "rf_address": "0abc12",
   "degrees": 20,
   "mode":"MANUAL"
+}
+```
+MANUAL on all devices
+```
+{
+  "degrees": 20,
+  "mode":"MANUAL"
+}
+```
+AUTO on all devices
+```
+{
+  "mode":"AUTO"
+}
+```
+VACATION on all devices until specific date (ISO 8601)
+```
+{
+  "mode":"VACATION",
+  "untilDate" : "2019-06-20T10:00:00Z"
 }
 ```
