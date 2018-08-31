@@ -1,6 +1,16 @@
 # node-red-contrib-maxcube
 A collection of node-red nodes to control the eQ-3 Max! Cube
 
+## Introduction
+### History
+node-red-contrib-maxcube2 is a fork of https://github.com/ivesdebruycker/node-red-contrib-maxcube using https://github.com/normen/maxcube2.
+
+### Changes from node-red-contrib-maxcube
+- Settings to temporary disable maxcube connection (the cube can handle only one TCP connection at a time, since maxcube/maxcube2 use a permanent connection if you want to temporary use another client you have to stop node-red...now you can disable in node settings)
+- I'm planning to expose some additional data provided by maxcube2 (device configurations, min/max/eco/comfort temperatures etc.)
+
+The old API didn't change currently so it's a drop-in replacement.
+
 ## Installation
 ```
 cd $HOME/.node-red
@@ -31,7 +41,9 @@ Whenever an input message is received, device states are updated from the Max! C
   "battery_low": false,
   "valve": 0,
   "setpoint": 5,
-  "temp": 15.4
+  "temp": 15.4,
+  "device_name": "Termosifone"
+  "room_name": "Bagno"
 }
 ```
 

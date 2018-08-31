@@ -1,4 +1,4 @@
-var MaxCube = require('maxcube');
+var MaxCube = require('maxcube2');
 
 module.exports = function(RED) {
   function MaxcubeNodeIn(config) {
