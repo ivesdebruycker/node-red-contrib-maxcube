@@ -1,7 +1,7 @@
 {
   "name": "node-red-contrib-maxcube2",
   "version": "0.0.1",
-  "description": "A node-red node to control the eQ-3 Max! Cube",
+  "description": "A node-red node to control the eQ-3 Max! Cube with maxcube2.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/maxill1/node-red-contrib-maxcube2.git"

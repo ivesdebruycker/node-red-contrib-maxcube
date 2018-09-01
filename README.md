@@ -1,4 +1,4 @@
-# node-red-contrib-maxcube
+# node-red-contrib-maxcube2
 A collection of node-red nodes to control the eQ-3 Max! Cube
 
 ## Introduction
@@ -9,14 +9,14 @@ node-red-contrib-maxcube2 is a fork of https://github.com/ivesdebruycker/node-re
 - Settings to temporary disable maxcube connection (the cube can handle only one TCP connection at a time, since maxcube/maxcube2 use a permanent connection if you want to temporary use another client you have to stop node-red...now you can disable in node settings)
 - Node to query devices configurations
 - Set mode to all devices with a single payload ({"mode" : "AUTO"} without rf_address)
-- I'm planning add some additional features provided by maxcube2 (schedule, etc)
+- I'm planning add some additional features like schedule settings
 
 The old API didn't change currently so it's a drop-in replacement.
 
 ## Installation
 ```
 cd $HOME/.node-red
-npm install node-red-contrib-maxcube
+npm install node-red-contrib-maxcube2
 ```
 Restart Node-RED.
 
@@ -49,9 +49,41 @@ Whenever an input message is received, device states are updated from the Max! C
 }
 ```
 
+### maxcube configuration (input)
+A node to query the eQ-3 Max! Cube for device states.
+
+Whenever an input message is received, device configuration are updated from the Max! Cube, and sent  and send it as single message with following structure:
+```
+{
+   "18b444":{
+      "rf_address":"18b444",
+      "device_type":1,
+      "serial_number":"OEQ1131666",
+      "comfort_temp":21.5,
+      "eco_temp":16.5,
+      "max_setpoint_temp":30,
+      "min_setpoint_temp":4.5,
+      "temp_offset":0,
+      "max_valve":100
+   },
+   "1709a1":{
+      "rf_address":"1709a1",
+      "device_type":1,
+      "serial_number":"NKF0004984",
+      "comfort_temp":21.5,
+      "eco_temp":16.5,
+      "max_setpoint_temp":30,
+      "min_setpoint_temp":4.5,
+      "temp_offset":0,
+      "max_valve":100
+   }
+}
+```
+
+
 ### maxcube (output)of a device
 A node to set the temperature and/or the mode of a device.
-Valid modes are "AUTO", "MANUAL" and "BOOST".
+Valid modes are "AUTO", "MANUAL", "BOOST" and "VACATION".
 
 Accepts messages with payload of type object with following structure:
 
