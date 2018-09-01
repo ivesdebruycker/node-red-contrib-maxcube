@@ -39,7 +39,8 @@
     category: 'input',
     color: '#F3B567',
     defaults: {
-      server: { value: '', type: 'maxcube-server' }
+      server: { value: '', type: 'maxcube-server' },
+      singleMessage : { value: false, required: false }
     },
     inputs: 1,
     outputs: 1,
@@ -56,26 +57,92 @@
         <label for="node-input-server"><i class="icon-tag"></i> Server</label>
         <input type="text" id="node-input-server">
     </div>
+    <div class="form-row">
+      <label for="node-input-singleMessage"><i class="icon-file"></i></label>
+      <input type="checkbox" id="node-input-singleMessage" style="display:inline-block; width:15px; vertical-align:baseline;"> Output to single message
+    </div>
+    <div class="form-tips">
+      <span<b>Note:</b> If "Output to single message" is checked the node will send only one message containing all devices requested data</span>
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="maxcube out">
     <p>A node to query the eQ-3 Max! Cube</p>
     <p>Whenever an input is received, device status is updated from the Maxcube, and sent as separate messages (one for each device) of form:
-      <pre>{ "rf_address": "0abc12",
-  "initialized": true,
-  "fromCmd": false,
-  "error": false,
-  "valid": true,
-  "mode": "MANUAL",
-  "dst_active": true,
-  "gateway_known": true,
-  "panel_locked": false,
-  "link_error": false,
-  "battery_low": false,
-  "valve": 0,
-  "setpoint": 5,
-  "temp": 15.4
-}</pre></p>
+      <pre>{
+    "rf_address": "1709d7",
+    "initialized": true,
+    "fromCmd": false,
+    "error": false,
+    "valid": true,
+    "mode": "AUTO",
+    "dst_active": true,
+    "gateway_known": true,
+    "panel_locked": false,
+    "link_error": false,
+    "battery_low": false,
+    "valve": 0,
+    "setpoint": 17,
+    "temp": 0,
+    "device_type": 1,
+    "device_name": "Termosifone Sala TV",
+    "room_name": "Piano terra",
+    "room_id": 1
+}</pre>
+</p>
+
+<p>or sent as single message of form:
+  <pre>
+  {
+      "1709d7": {
+          "rf_address": "1709d7",
+          "initialized": true,
+          "fromCmd": false,
+          "error": false,
+          "valid": true,
+          "mode": "AUTO",
+          "dst_active": true,
+          "gateway_known": true,
+          "panel_locked": false,
+          "link_error": false,
+          "battery_low": false,
+          "valve": 0,
+          "setpoint": 17,
+          "temp": 0,
+          "device_type": 1,
+          "device_name": "Termosifone Sala TV",
+          "room_name": "Piano terra",
+          "room_id": 1
+      },
+      "18eb18": {
+          "rf_address": "18eb18",
+          "initialized": true,
+          "fromCmd": false,
+          "error": false,
+          "valid": true,
+          "mode": "AUTO",
+          "dst_active": true,
+          "gateway_known": true,
+          "panel_locked": false,
+          "link_error": false,
+          "battery_low": false,
+          "valve": 4,
+          "setpoint": 17
+          "temp": 27.2,
+          "device_type": 3,
+          "device_name": "Termostato a parete",
+          "room_name": "Piano terra",
+          "room_id": 1
+      }
+      "0a1d0e": {
+          "rf_address": "0a1d0e",
+          "open": false,
+          "device_type": 5,
+          "device_name": "Pulsante Eco"
+      }
+  }
+  </pre></p>
+
 </script>
 
 <script type="text/javascript">
@@ -83,7 +150,8 @@
     category: 'input',
     color: '#F3B567',
     defaults: {
-      server: { value: '', type: 'maxcube-server' }
+      server: { value: '', type: 'maxcube-server' },
+      singleMessage : { value: false, required: false }
     },
     inputs: 1,
     outputs: 1,
@@ -100,11 +168,34 @@
         <label for="node-input-server"><i class="icon-tag"></i> Server</label>
         <input type="text" id="node-input-server">
     </div>
+    <div class="form-row">
+      <label for="node-input-singleMessage"><i class="icon-file"></i></label>
+      <input type="checkbox" id="node-input-singleMessage" style="display:inline-block; width:15px; vertical-align:baseline;"> Output to single message
+    </div>
+    <div class="form-tips">
+      <span<b>Note:</b> If "Output to single message" is checked the node will send only one message containing all devices requested data</span>
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="maxcube device config">
     <p>A node to query the eQ-3 Max! Cube devices configuration</p>
-    <p>Whenever an input is received, devices configuration is updated from the Maxcube, and send it as single message of form:
+    <p>Whenever an input is received, devices configuration is updated from the Maxcube, and sent as separate messages (one for each device) of form:
+      <pre>
+      {
+         "rf_address":"18b444",
+         "device_type":1,
+         "serial_number":"OEQ1131666",
+         "comfort_temp":21.5,
+         "eco_temp":16.5,
+         "max_setpoint_temp":30,
+         "min_setpoint_temp":4.5,
+         "temp_offset":0,
+         "max_valve":100
+      }
+      </pre>
+    </p>
+    <p>or sent as single message of form:
+      <pre>
       <pre>
       {
          "18b444":{
@@ -160,7 +251,7 @@
         <input type="text" id="node-config-input-port" placeholder="port">
     </div>
     <div class="form-row">
-        <label for="node-config-input-disabled"><i class="icon-lan-disconnect"></i> Disabled</label>
+        <label for="node-config-input-disabled"><i class="icon-pause"></i> Disabled</label>
         <input type="checkbox" id="node-config-input-disabled" >
     </div>
 </script>

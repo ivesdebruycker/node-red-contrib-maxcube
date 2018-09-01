@@ -6,8 +6,9 @@ module.exports = function(RED) {
   function initNode(node, config){
     //create node
     RED.nodes.createNode(node, config);
-    //check configurations
+    //check and propagate configurations
     node.serverConfig = RED.nodes.getNode(config.server);
+    node.singleMessage = config.singleMessage;
     if (!node.serverConfig) {
       return false;
     }
@@ -114,19 +115,37 @@ module.exports = function(RED) {
         return;
       };
 
+      var additionalData = function(deviceStatus, maxCube){
+        var deviceInfo = maxCube.getDeviceInfo(deviceStatus.rf_address);
+        if(deviceInfo){
+          deviceStatus.device_type = deviceInfo.device_type;
+          deviceStatus.device_name = deviceInfo.device_name;
+          deviceStatus.room_name = deviceInfo.room_name;
+          deviceStatus.room_id = deviceInfo.room_id;
+        }
+      }
+
       var maxCube = node.serverConfig.maxCube;
       node.log(JSON.stringify(maxCube.getCommStatus()));
-      maxCube.getDeviceStatus().then(function (payload) {
-        // send devices statuses as separate messages
-        node.send([payload.map(function function_name(deviceStatus) {
-            // add device name, room name, to status object
-            var deviceInfo = maxCube.getDeviceInfo(deviceStatus.rf_address);
-            if(deviceInfo!==undefined){
-              deviceStatus.device_name = deviceInfo.device_name;
-              deviceStatus.room_name = deviceInfo.room_name;
-            }
-           return { rf_address: deviceStatus.rf_address, payload: deviceStatus };
-         })]);
+      maxCube.getDeviceStatus().then(function (devices) {
+
+        if(node.singleMessage){
+          // send devices statuses as single message
+          var msg = {};
+          for (var i = 0; i < devices.length; i++) {
+            var deviceStatus = devices[i];
+            additionalData(deviceStatus, maxCube);
+            msg[deviceStatus.rf_address] = deviceStatus;
+          }
+          node.send({payload: msg});
+        }else{
+          // send devices statuses as separate messages
+          node.send([devices.map(function function_name(deviceStatus) {
+             // add device name, room name, to status object
+             additionalData(deviceStatus, maxCube);
+             return { rf_address: deviceStatus.rf_address, payload: deviceStatus };
+           })]);
+         }
       });
     });
   }
@@ -148,14 +167,22 @@ module.exports = function(RED) {
       node.log(JSON.stringify(maxCube.getCommStatus()));
       maxCube.getDeviceStatus().then(function (devices) {
 
-        // add every single device to the payload
-        var devicesConfig = {};
-        for (var i = 0; i < devices.length; i++) {
-          var deviceStatus = devices[i];
-          var conf = maxCube.getDeviceConfiguration(deviceStatus.rf_address);
-          devicesConfig[deviceStatus.rf_address] = conf;
-        }
-        node.send({payload: devicesConfig});
+        if(node.singleMessage){
+          // send devices statuses as single message
+          var msg = {};
+          for (var i = 0; i < devices.length; i++) {
+            var deviceStatus = devices[i];
+            var conf = maxCube.getDeviceConfiguration(deviceStatus.rf_address);
+            msg[deviceStatus.rf_address] = conf;
+          }
+          node.send({payload: msg});
+        }else{
+          // send devices statuses as separate messages
+          node.send([devices.map(function function_name(deviceStatus) {
+             var conf = maxCube.getDeviceConfiguration(deviceStatus.rf_address);
+             return { rf_address: deviceStatus.rf_address, payload: conf };
+           })]);
+         }
       });
     });
   }
@@ -165,6 +192,7 @@ module.exports = function(RED) {
   function MaxcubeServerNode(config) {
     var node = this;
     RED.nodes.createNode(this, config);
+    node.log(config.singleMessage);
 
     this.host = config.host;
     this.port = config.port;
