@@ -95,7 +95,7 @@ module.exports = function(RED) {
             if(deviceInfo.device_type == '1' || deviceInfo.device_type == '2' || deviceInfo.device_type == '3'){
               setTemp(deviceStatus.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate);
             }else{
-              node.warn("Ignoring device "+deviceStatus.rf_address + "(device_type "+deviceInfo.device_type+")");
+              node.log("Ignoring device "+deviceStatus.rf_address + "(device_type "+deviceInfo.device_type+")");
             }
           }
         });
@@ -118,10 +118,13 @@ module.exports = function(RED) {
       var additionalData = function(deviceStatus, maxCube){
         var deviceInfo = maxCube.getDeviceInfo(deviceStatus.rf_address);
         if(deviceInfo){
-          deviceStatus.device_type = deviceInfo.device_type;
-          deviceStatus.device_name = deviceInfo.device_name;
-          deviceStatus.room_name = deviceInfo.room_name;
-          deviceStatus.room_id = deviceInfo.room_id;
+          var whitelist = ['device_type', 'device_name', 'room_name', 'room_id'];
+          for (var i = 0; i < whitelist.length; i++) {
+            var key = whitelist[i];
+            if(deviceInfo[key]){
+                deviceStatus[key] = deviceInfo[key];
+            }
+          }
         }
       }
 
