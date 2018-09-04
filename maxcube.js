@@ -49,6 +49,13 @@ module.exports = function(RED) {
     return false;
   }
 
+  function validateMsg(msg){
+    //maxcube.js won't accept mode if lowercase
+    if(msg.payload.mode){
+      msg.payload.mode = msg.payload.mode.toUpperCase();
+    }
+  }
+
   function MaxcubeNodeIn(config) {
     var node = this;
     if(!initNode(node, config)){
@@ -60,14 +67,17 @@ module.exports = function(RED) {
         return;
       };
 
+      validateMsg(msg);
+
       var maxCube = node.serverConfig.maxCube;
 
       var setTemp = function(rf_address, degrees, mode, untilDate){
         maxCube.setTemperature(rf_address, degrees, mode, untilDate).then(function (success) {
+          var data = [rf_address, degrees, mode, untilDate].filter(function (val) {return val;}).join(', ')
           if (success) {
-            node.log('Temperature set (' + [rf_address, degrees, mode, untilDate].filter(function (val) {return val;}).join(', ') + ')');
+            node.log('Temperature set (' + data+ ')');
           } else {
-            node.log('Error setting temperature');
+            node.log('Error setting temperature (' + data+ ')');
           }
         }).catch(function(e) {
           node.warn(e);
