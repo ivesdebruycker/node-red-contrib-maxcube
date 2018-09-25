@@ -23,6 +23,11 @@ module.exports = function(RED) {
       maxCube.on('connected', function () {
         node.status({fill:"green",shape:"dot",text:"connected"});
       });
+
+      maxCube.on('error', function (err) {
+        node.log(err);
+        node.status({fill:"red",shape:"dot",text:"Error: "+err});
+      });
     }
 
     return true;
