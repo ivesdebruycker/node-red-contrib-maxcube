@@ -2,6 +2,19 @@ var MaxCube = require('maxcube2');
 
 module.exports = function(RED) {
 
+
+  function sendCommStatus(node, success, data, error){
+      var maxCube = node.serverConfig.maxCube;
+      var duty_cycle = maxCube.getCommStatus();
+      node.log(JSON.stringify(duty_cycle));
+      var msg = {};
+      msg.success = success;
+      msg.data = data;
+      msg.error = error;
+      msg.comm_status = duty_cycle;
+      node.send({payload: msg});
+  }
+
   //missing configurations
   function initNode(node, config){
     //create node
@@ -70,24 +83,27 @@ module.exports = function(RED) {
     node.on('input', function(msg) {
       if(checkInputDisabled(node)){
         return;
-      };
+      }
 
       validateMsg(msg);
 
       var maxCube = node.serverConfig.maxCube;
 
+
       var setTemp = function(rf_address, degrees, mode, untilDate){
         maxCube.setTemperature(rf_address, degrees, mode, untilDate).then(function (success) {
-          var data = [rf_address, degrees, mode, untilDate].filter(function (val) {return val;}).join(', ')
+          var data = [rf_address, degrees, mode, untilDate].filter(function (val) {return val;}).join(', ');
           if (success) {
             node.log('Temperature set (' + data+ ')');
           } else {
             node.log('Error setting temperature (' + data+ ')');
           }
+          sendCommStatus(node, success, data);
         }).catch(function(e) {
           node.warn(e);
+          sendCommStatus(node, false, data, e);
         });
-      }
+      };
 
       var devices = [];
       //specific device
@@ -144,7 +160,8 @@ module.exports = function(RED) {
       }
 
       var maxCube = node.serverConfig.maxCube;
-      node.log(JSON.stringify(maxCube.getCommStatus()));
+      var duty_cycle = maxCube.getCommStatus();
+      node.log(JSON.stringify(duty_cycle));
       maxCube.getDeviceStatus().then(function (devices) {
 
         if(node.singleMessage){
@@ -155,12 +172,14 @@ module.exports = function(RED) {
             additionalData(deviceStatus, maxCube);
             msg[deviceStatus.rf_address] = deviceStatus;
           }
+          msg.comm_status = duty_cycle;
           node.send({payload: msg});
         }else{
           // send devices statuses as separate messages
           node.send([devices.map(function function_name(deviceStatus) {
              // add device name, room name, to status object
              additionalData(deviceStatus, maxCube);
+             deviceStatus.comm_status = duty_cycle;
              return { rf_address: deviceStatus.rf_address, payload: deviceStatus };
            })]);
          }
@@ -179,10 +198,11 @@ module.exports = function(RED) {
     node.on('input', function(msg) {
       if(checkInputDisabled(node)){
         return;
-      };
+      }
 
       var maxCube = node.serverConfig.maxCube;
-      node.log(JSON.stringify(maxCube.getCommStatus()));
+      var duty_cycle = maxCube.getCommStatus();
+      node.log(JSON.stringify(duty_cycle));
       maxCube.getDeviceStatus().then(function (devices) {
 
         if(node.singleMessage){
@@ -193,11 +213,13 @@ module.exports = function(RED) {
             var conf = maxCube.getDeviceConfiguration(deviceStatus.rf_address);
             msg[deviceStatus.rf_address] = conf;
           }
+          msg.comm_status = duty_cycle;
           node.send({payload: msg});
         }else{
           // send devices statuses as separate messages
           node.send([devices.map(function function_name(deviceStatus) {
              var conf = maxCube.getDeviceConfiguration(deviceStatus.rf_address);
+             conf.comm_status = duty_cycle;
              return { rf_address: deviceStatus.rf_address, payload: conf };
            })]);
          }
