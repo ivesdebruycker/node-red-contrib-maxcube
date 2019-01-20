@@ -98,6 +98,7 @@ module.exports = function(RED) {
           } else {
             node.log('Error setting temperature (' + data+ ')');
           }
+          node.status({fill:"green",shape:"dot",text: "last msg: "+JSON.stringify(data)});
           sendCommStatus(node, success, data);
         }).catch(function(e) {
           node.warn(e);
@@ -144,7 +145,7 @@ module.exports = function(RED) {
     node.on('input', function(msg) {
       if(checkInputDisabled(node)){
         return;
-      };
+      }
 
       var additionalData = function(deviceStatus, maxCube){
         var deviceInfo = maxCube.getDeviceInfo(deviceStatus.rf_address);
@@ -157,7 +158,7 @@ module.exports = function(RED) {
             }
           }
         }
-      }
+      };
 
       var maxCube = node.serverConfig.maxCube;
       var duty_cycle = maxCube.getCommStatus();
@@ -183,6 +184,7 @@ module.exports = function(RED) {
              return { rf_address: deviceStatus.rf_address, payload: deviceStatus };
            })]);
          }
+         node.status({fill:"green",shape:"dot",text: "last call: "+new Date().toTimeString()});
       });
     });
   }
@@ -223,6 +225,7 @@ module.exports = function(RED) {
              return { rf_address: deviceStatus.rf_address, payload: conf };
            })]);
          }
+         node.status({fill:"green",shape:"dot",text: "last call: "+new Date().toTimeString()});
       });
     });
   }
@@ -238,15 +241,55 @@ module.exports = function(RED) {
     this.port = config.port;
     this.disabled = config.disabled;
 
-    if (this.disabled || !node.host || !node.port) {
-      return;
-    }
+    node.maxcubeConnect = function(){
 
-    node.maxCube = new MaxCube(node.host, node.port);
+      if(node.maxCube){
+         node.maxCube.close();
+         node.maxCube = undefined;
+      }
+
+      if (node.disabled || !node.host || !node.port) {
+        node.log("Maxcube disabled");
+        return;
+      }
+
+      //connect/new instance
+      node.log("Preparing new maxcube connection");
+      node.maxCube = new MaxCube(node.host, node.port);
+
+      //common events
+      if(node.maxCube){
+        node.log("Preparing new Maxcube events callback");
+        node.maxCube.on('closed', function () {
+          node.log("Maxcube connection closed...");
+          connected = false;
+        });
+        node.maxCube.on('error', function (e) {
+          node.log("Error connecting to the cube.");
+          node.log(JSON.stringify(e));
+          connected = false;
+          //force node to init connection if not available
+          node.log("Maxcube was disconnected... will try to reconnect.");
+          node.maxcubeConnect();
+        });
+        node.maxCube.on('connected', function () {
+            node.log("Maxcube connected");
+            connected = true;
+        });
+      }
+    };
 
     node.on("close", function() {
-      node.maxCube.close();
+      if(node.maxCube){
+        node.maxCube.close();
+      }
     });
+
+    //first connection
+    var connected = false;
+    node.maxcubeConnect();
+
   }
+
   RED.nodes.registerType("maxcube-server", MaxcubeServerNode);
 }
