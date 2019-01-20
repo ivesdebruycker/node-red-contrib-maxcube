@@ -98,6 +98,7 @@ module.exports = function(RED) {
           } else {
             node.log('Error setting temperature (' + data+ ')');
           }
+          node.status({fill:"green",shape:"dot",text: "last msg: "+JSON.stringify(data)});
           sendCommStatus(node, success, data);
         }).catch(function(e) {
           node.warn(e);
@@ -144,7 +145,7 @@ module.exports = function(RED) {
     node.on('input', function(msg) {
       if(checkInputDisabled(node)){
         return;
-      };
+      }
 
       var additionalData = function(deviceStatus, maxCube){
         var deviceInfo = maxCube.getDeviceInfo(deviceStatus.rf_address);
@@ -157,7 +158,7 @@ module.exports = function(RED) {
             }
           }
         }
-      }
+      };
 
       var maxCube = node.serverConfig.maxCube;
       var duty_cycle = maxCube.getCommStatus();
@@ -183,6 +184,7 @@ module.exports = function(RED) {
              return { rf_address: deviceStatus.rf_address, payload: deviceStatus };
            })]);
          }
+         node.status({fill:"green",shape:"dot",text: "last call: "+new Date().toTimeString()});
       });
     });
   }
@@ -223,6 +225,7 @@ module.exports = function(RED) {
              return { rf_address: deviceStatus.rf_address, payload: conf };
            })]);
          }
+         node.status({fill:"green",shape:"dot",text: "last call: "+new Date().toTimeString()});
       });
     });
   }
