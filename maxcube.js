@@ -27,21 +27,18 @@ module.exports = function(RED) {
     }
 
     //handle status icons
-    var maxCube = node.serverConfig.maxCube;
-    if(maxCube){
-      maxCube.on('closed', function () {
-        node.status({fill:"red",shape:"ring",text:"disconnected"});
-      });
+    node.serverConfig.on('closed', function () {
+      node.status({fill:"red",shape:"ring",text:"disconnected"});
+    });
 
-      maxCube.on('connected', function () {
-        node.status({fill:"green",shape:"dot",text:"connected"});
-      });
+    node.serverConfig.on('connected', function () {
+      node.status({fill:"green",shape:"dot",text:"connected"});
+    });
 
-      maxCube.on('error', function (err) {
-        node.log(err);
-        node.status({fill:"red",shape:"dot",text:"Error: "+err});
-      });
-    }
+    node.serverConfig.on('error', function (err) {
+      node.log(err);
+      node.status({fill:"red",shape:"dot",text:"Error: "+err});
+    });
 
     return true;
   }
@@ -261,10 +258,17 @@ module.exports = function(RED) {
       if(node.maxCube){
         node.log("Preparing new Maxcube events callback");
         node.maxCube.on('closed', function () {
-          node.log("Maxcube connection closed...");
+          node.emit('closed');
           connected = false;
+          if(node.maxCube != null) {
+            node.log("Maxcube connection closed unexpectedly... will try to reconnect.");
+            node.maxcubeConnect();
+          }
+          else
+            node.log("Maxcube connection closed...");
         });
         node.maxCube.on('error', function (e) {
+          node.emit('error', e);
           node.log("Error connecting to the cube.");
           node.log(JSON.stringify(e));
           connected = false;
@@ -273,15 +277,18 @@ module.exports = function(RED) {
           node.maxcubeConnect();
         });
         node.maxCube.on('connected', function () {
-            node.log("Maxcube connected");
-            connected = true;
+          node.emit('connected');
+          node.log("Maxcube connected");
+          connected = true;
         });
       }
     };
 
     node.on("close", function() {
       if(node.maxCube){
-        node.maxCube.close();
+        var maxCube = node.maxCube;
+        node.maxCube = null;
+        maxCube.close();
       }
     });
 
