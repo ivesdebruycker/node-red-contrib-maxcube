@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-maxcube2",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A node-red node to control the eQ-3 Max! Cube with maxcube2.js",
   "repository": {
     "type": "git",
@@ -27,7 +27,8 @@
   "contributors": [
     "Ives De Bruycker",
     "Luca Mazzilli",
-    "tedstriker"
+    "tedstriker",
+    "Nils Schneider"
   ],
   "node-red": {
     "nodes": {
