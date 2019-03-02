@@ -261,8 +261,13 @@ module.exports = function(RED) {
       if(node.maxCube){
         node.log("Preparing new Maxcube events callback");
         node.maxCube.on('closed', function () {
-          node.log("Maxcube connection closed...");
           connected = false;
+          if(node.maxCube != null) {
+            node.log("Maxcube connection closed unexpectedly... will try to reconnect.");
+            node.maxcubeConnect();
+          }
+          else
+            node.log("Maxcube connection closed...");
         });
         node.maxCube.on('error', function (e) {
           node.log("Error connecting to the cube.");
@@ -281,7 +286,9 @@ module.exports = function(RED) {
 
     node.on("close", function() {
       if(node.maxCube){
-        node.maxCube.close();
+        var maxCube = node.maxCube;
+        node.maxCube = null;
+        maxCube.close();
       }
     });
 
