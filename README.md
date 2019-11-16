@@ -35,13 +35,15 @@ Whenever an input message is received, device states are updated from the Max! C
 }
 ```
 
-### maxcube (output)
-A node to set the temperature of a device.
+### maxcube (output)of a device
+A node to set the temperature and/or the mode of a device.
+Valid modes are "AUTO", "MANUAL" and "BOOST".
 
 Accepts messages with payload of type object with following structure:
 ```
 {
   "rf_address": "0abc12",
-  "degrees": 20
+  "degrees": 20,
+  "mode":"MANUAL"
 }
 ```
