@@ -13,8 +13,10 @@
     "node-red",
     "Max Cube"
   ],
-  "author": {
-    "name": "Ives De Bruycker"
+  "author": "Ives De Bruycker",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ivesdebruycker/node-red-contrib-maxcube/issues"
   },
   "node-red": {
     "nodes": {
