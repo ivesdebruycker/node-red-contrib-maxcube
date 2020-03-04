@@ -241,6 +241,7 @@ module.exports = function(RED) {
     node.maxcubeConnect = function(){
 
       if(node.maxCube){
+         node.maxCube.removeAllListeners('closed');
          node.maxCube.close();
          node.maxCube = undefined;
       }
