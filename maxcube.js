@@ -241,6 +241,7 @@ module.exports = function(RED) {
     node.maxcubeConnect = function(){
 
       if(node.maxCube){
+         node.maxCube.removeAllListeners('closed');
          node.maxCube.close();
          node.maxCube = undefined;
       }
@@ -261,8 +262,8 @@ module.exports = function(RED) {
           node.emit('closed');
           connected = false;
           if(node.maxCube != null) {
-            node.log("Maxcube connection closed unexpectedly... will try to reconnect.");
-            node.maxcubeConnect();
+            node.log("Maxcube connection closed unexpectedly... will try to reconnect in one second.");
+            setTimeout( node.maxcubeConnect, 1000 );
           }
           else
             node.log("Maxcube connection closed...");
@@ -273,8 +274,8 @@ module.exports = function(RED) {
           node.log(JSON.stringify(e));
           connected = false;
           //force node to init connection if not available
-          node.log("Maxcube was disconnected... will try to reconnect.");
-          node.maxcubeConnect();
+          node.log("Maxcube was disconnected... will try to reconnect in one second.");
+          setTimeout( node.maxcubeConnect, 1000 );
         });
         node.maxCube.on('connected', function () {
           node.emit('connected');
