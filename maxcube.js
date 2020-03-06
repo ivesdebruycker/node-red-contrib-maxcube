@@ -88,7 +88,8 @@ module.exports = function(RED) {
 
 
       var setTemp = function(rf_address, degrees, mode, untilDate){
-        maxCube.setTemperature(rf_address, degrees, mode, untilDate).then(function (success) {
+        // Give the cube 30 seconds to anwer
+        maxCube.setTemperature(rf_address, degrees, mode, untilDate, 30000).then(function (success) {
           var data = [rf_address, degrees, mode, untilDate].filter(function (val) {return val;}).join(', ');
           if (success) {
             node.log('Temperature set (' + data+ ')');
@@ -109,7 +110,8 @@ module.exports = function(RED) {
         setTemp(msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate);
       }else{
         //all devices: query getDeviceStatus, then update all!
-        maxCube.getDeviceStatus().then(function (devices) {
+        // Give the cube 30 seconds to answer
+        maxCube.getDeviceStatus( undefined, 30000 ).then(function (devices) {
           for (var i = 0; i < devices.length; i++) {
             var deviceStatus = devices[i];
             //ignoring eco buttons/window switch/etc
@@ -160,7 +162,8 @@ module.exports = function(RED) {
       var maxCube = node.serverConfig.maxCube;
       var duty_cycle = maxCube.getCommStatus();
       node.log(JSON.stringify(duty_cycle));
-      maxCube.getDeviceStatus().then(function (devices) {
+      // Give the cube 30 seconds to answer
+      maxCube.getDeviceStatus( undefined, 30000).then(function (devices) {
 
         if(node.singleMessage){
           // send devices statuses as single message
@@ -202,7 +205,8 @@ module.exports = function(RED) {
       var maxCube = node.serverConfig.maxCube;
       var duty_cycle = maxCube.getCommStatus();
       node.log(JSON.stringify(duty_cycle));
-      maxCube.getDeviceStatus().then(function (devices) {
+      // Give the cube 30 seconds to answer
+      maxCube.getDeviceStatus( undefined, 30000 ).then(function (devices) {
 
         if(node.singleMessage){
           // send devices statuses as single message
