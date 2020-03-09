@@ -7,7 +7,7 @@
     "url": "git://github.com/maxill1/node-red-contrib-maxcube2.git"
   },
   "dependencies": {
-    "maxcube2": "^2.1.2"
+    "maxcube2": "^2.2.2"
   },
   "keywords": [
     "node-red",
