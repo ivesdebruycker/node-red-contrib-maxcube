@@ -90,7 +90,7 @@ module.exports = function(RED) {
       var setTemp = function(rf_address, degrees, mode, untilDate){
         // Give the cube 30 seconds to answer
         return maxCube.setTemperature(rf_address, degrees, mode, untilDate, 30000).then(function (success) {
-          var data = [rf_address, degrees, mode, untilDate].filter(function (val) {return val;}).join(', ');
+          let data = [rf_address, degrees, mode, untilDate].filter(function (val) {return val;}).join(', ');
           node.status({fill:"green",shape:"dot",text: "last msg: "+JSON.stringify(data)});
           sendCommStatus(node, success, data);
           if (success) {
@@ -102,7 +102,7 @@ module.exports = function(RED) {
           }
         }).catch(function(e) {
           node.warn(e);
-          sendCommStatus(node, false, data, e);
+          sendCommStatus(node, false, undefined, e);
           // rethrow error to pass it on up the stack
           throw e;
         });
@@ -118,7 +118,7 @@ module.exports = function(RED) {
             node.log( 'Device reset: ' + rf_address );
             return true;
           } else {
-            node.log( 'Reset command for device ' + rf_adress + ' discarded by cube. Maybe duty cycle exceeded.' );
+            node.log( 'Reset command for device ' + rf_address + ' discarded by cube. Maybe duty cycle exceeded.' );
             throw new Error( 'Reset command discarded.' );
           }
         } ).catch( function( e ) {
@@ -130,9 +130,10 @@ module.exports = function(RED) {
       };
 
       let sendCommand = function( rf_address, payload ){
+        let setTempFunc;
         if( payload.degrees || payload.mode || payload.untilDate ) {
           // Temperature data is available, so register the function
-          var setTempFunc = function() {
+          setTempFunc = function() {
             return setTemp( rf_address, payload.degrees, payload.mode, payload.untilDate ).catch( function( err ) {
               // Do nothing, everything has been done already
               // But still catch the error, because uncaught errors are bad
@@ -140,7 +141,7 @@ module.exports = function(RED) {
           };
         } else {
           // No temperature data, so do nothing successfully
-          var setTempFunc = function() {
+          setTempFunc = function() {
             return true;
           };
         }
@@ -160,7 +161,6 @@ module.exports = function(RED) {
         }
       };
 
-      var devices = [];
       //specific device
       if(msg.payload.rf_address){
         sendCommand( msg.payload.rf_address, msg.payload );
@@ -344,7 +344,6 @@ module.exports = function(RED) {
         node.log("Preparing new Maxcube events callback");
         node.maxCube.on('closed', function () {
           node.emit('closed');
-          connected = false;
           if(node.maxCube != null) {
             node.log("Maxcube connection closed unexpectedly... will try to reconnect in one second.");
             setTimeout( node.maxcubeConnect, 1000 );
@@ -356,7 +355,6 @@ module.exports = function(RED) {
           node.emit('error', e);
           node.log("Error connecting to the cube.");
           node.log(JSON.stringify(e));
-          connected = false;
           //force node to init connection if not available
           node.log("Maxcube was disconnected... will try to reconnect in one second.");
           setTimeout( node.maxcubeConnect, 1000 );
@@ -364,7 +362,6 @@ module.exports = function(RED) {
         node.maxCube.on('connected', function () {
           node.emit('connected');
           node.log("Maxcube connected");
-          connected = true;
         });
       }
     };
@@ -378,7 +375,6 @@ module.exports = function(RED) {
     });
 
     //first connection
-    var connected = false;
     node.maxcubeConnect();
 
   }
