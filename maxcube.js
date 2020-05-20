@@ -88,48 +88,128 @@ module.exports = function(RED) {
 
 
       var setTemp = function(rf_address, degrees, mode, untilDate){
-        // Give the cube 30 seconds to anwer
-        maxCube.setTemperature(rf_address, degrees, mode, untilDate, 30000).then(function (success) {
+        // Give the cube 30 seconds to answer
+        return maxCube.setTemperature(rf_address, degrees, mode, untilDate, 30000).then(function (success) {
           var data = [rf_address, degrees, mode, untilDate].filter(function (val) {return val;}).join(', ');
-          if (success) {
-            node.log('Temperature set (' + data+ ')');
-          } else {
-            node.log('Error setting temperature (' + data+ ')');
-          }
           node.status({fill:"green",shape:"dot",text: "last msg: "+JSON.stringify(data)});
           sendCommStatus(node, success, data);
+          if (success) {
+            node.log('Temperature set (' + data+ ')');
+            return true;
+          } else {
+            node.warn('Temperature set command (' + data+ ') discarded by cube. Maybe duty cycle exceeded.');
+            throw new Error( 'Temperature set command discarded.' );
+          }
         }).catch(function(e) {
           node.warn(e);
           sendCommStatus(node, false, data, e);
+          // rethrow error to pass it on up the stack
+          throw e;
         });
+      };
+
+      var resetDevice = function( rf_address ){
+        // Timeout after 30 seconds
+        node.log( 'Calling resetError for ' + rf_address );
+        return maxCube.resetError( rf_address, 30000 ).then( function (success) {
+          node.status( { fill: 'green', shape: 'dot', text: 'last msg: reset ' + JSON.stringify(rf_address) } );
+          sendCommStatus(node, success, rf_address);
+          if( success ) {
+            node.log( 'Device reset: ' + rf_address );
+            return true;
+          } else {
+            node.log( 'Reset command for device ' + rf_adress + ' discarded by cube. Maybe duty cycle exceeded.' );
+            throw new Error( 'Reset command discarded.' );
+          }
+        } ).catch( function( e ) {
+          node.warn(e);
+          sendCommStatus(node, false, rf_address, e);
+          // rethrow error to pass it on up the stack
+          throw e;
+        } );
+      };
+
+      let sendCommand = function( rf_address, payload ){
+        if( payload.degrees || payload.mode || payload.untilDate ) {
+          // Temperature data is available, so register the function
+          var setTempFunc = function() {
+            return setTemp( rf_address, payload.degrees, payload.mode, payload.untilDate ).catch( function( err ) {
+              // Do nothing, everything has been done already
+              // But still catch the error, because uncaught errors are bad
+            } );
+          };
+        } else {
+          // No temperature data, so do nothing successfully
+          var setTempFunc = function() {
+            return true;
+          };
+        }
+        
+        if( payload.reset ){
+          node.log( 'Calling resetDevice for ' + rf_address );
+          return resetDevice( rf_address ).then( function( success ) {
+            node.log( 'Calling setTempFunc for ' + rf_address );
+            return setTempFunc();
+          } ).catch( function( err ) {
+            // do nothing, everything has been done already
+            // but still catch the error, because uncaught errors are bad
+          } );
+        } else {
+          node.log( 'Calling setTempFunc for ' + rf_address );
+          return setTempFunc();
+        }
       };
 
       var devices = [];
       //specific device
       if(msg.payload.rf_address){
-        setTemp(msg.payload.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate);
-      }else{
+        sendCommand( msg.payload.rf_address, msg.payload );
+      } else {
         //all devices: query getDeviceStatus, then update all!
         // Give the cube 30 seconds to answer
         maxCube.getDeviceStatus( undefined, 30000 ).then(function (devices) {
           for (var i = 0; i < devices.length; i++) {
             var deviceStatus = devices[i];
-            //ignoring eco buttons/window switch/etc
-            // cube	0
-            // radiator thermostat	1
-            // radiator thermostat plus	2
-            // wall thermostat	3
-            // shutter contact	4
-            // eco button	5
-            // unknown	6
             var deviceInfo = maxCube.getDeviceInfo(deviceStatus.rf_address);
-            if(deviceInfo.device_type == '1' || deviceInfo.device_type == '2' || deviceInfo.device_type == '3'){
-              setTemp(deviceStatus.rf_address, msg.payload.degrees, msg.payload.mode, msg.payload.untilDate);
-            }else{
-              node.log("Ignoring device "+deviceStatus.rf_address + "(device_type "+deviceInfo.device_type+")");
+            // cube	0                 --> No reset, no temperature
+            // radiator thermostat	1 --> Reset and temperature
+            // radiator thermostat plus	2 --> Reset and temperature
+            // wall thermostat	3         --> Reset and temperature
+            // shutter contact	4         --> No reset, no temperature
+            // eco button	5         --> Reset, but no temperature. Are we sure about that?
+            // unknown	6                 --> Unknown, so do nothing
+            let payload = msg.payload;
+            switch( deviceInfo.device_type ) {
+            case '0':
+            case '4':
+            case '6':
+              // Do nothing, no matter what the user requested.
+              payload.reset = false;
+              payload.degrees = undefined;
+              payload.mode = undefined;
+              payload.untilDate = undefined;
+              break;
+            case '5':
+              // Do a reset, but don't send a temperature, even if the user requests.
+              payload.degrees = undefined;
+              payload.mode = undefined;
+              payload.untilDate = undefined;
+              break;
+            case '1':
+            case '2':
+            case '3':
+              // Do whatever the user requested.
+              break;
+            default:
+              node.error( 'Unknown device type: ' + deviceInfo.device_type + ' at address ' + deviceStatus.rf_address );
+              return;
             }
+            node.log( 'Sending command to device ' + deviceStatus.rf_address );
+            sendCommand( deviceStatus.rf_address, payload );
           }
-        });
+        } ).catch( function( err ) {
+          node.error( 'Uncaught error in getDeviceStatus.' );
+        } );
       }
     });
   }

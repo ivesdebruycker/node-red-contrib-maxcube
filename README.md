@@ -10,6 +10,7 @@ node-red-contrib-maxcube2 is a fork of https://github.com/ivesdebruycker/node-re
 - Node to query devices configurations
 - Set mode to all devices with a single payload ({"mode" : "AUTO"} without rf_address)
 - Output devices data as single message or separeted messages
+- Send a reset command to devices not reacting to other commands
 - I'm planning add some additional features like schedule settings
 
 The old API didn't change currently so it's a drop-in replacement.
@@ -149,7 +150,7 @@ or as a single message with the following structure:
 ```
 
 ### maxcube (output)of a device
-A node to set the temperature and/or the mode of a device.
+A node to set the temperature and/or the mode of a device and/or reset a device.
 Valid modes are "AUTO", "MANUAL", "BOOST" and "VACATION".
 
 Accepts messages with payload of type object with following structure:
@@ -181,4 +182,19 @@ VACATION on all devices until specific date (ISO 8601)
   "mode":"VACATION",
   "untilDate" : "2019-06-20T10:00:00Z"
 }
+```
+Reset a device
+```
+{
+  "rf_address": "0abc12",
+  "reset": true
+}
+```
+Reset all devices
+```
+{
+  "reset": true
+}
+```
+The reset field can also be added to any of the above commands to issue a reset command before sending the temperature update.
 ```
