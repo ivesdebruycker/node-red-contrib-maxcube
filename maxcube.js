@@ -110,7 +110,6 @@ module.exports = function(RED) {
 
       var resetDevice = function( rf_address ){
         // Timeout after 30 seconds
-        node.log( 'Calling resetError for ' + rf_address );
         return maxCube.resetError( rf_address, 30000 ).then( function (success) {
           node.status( { fill: 'green', shape: 'dot', text: 'last msg: reset ' + JSON.stringify(rf_address) } );
           sendCommStatus(node, success, rf_address);
@@ -118,7 +117,7 @@ module.exports = function(RED) {
             node.log( 'Device reset: ' + rf_address );
             return true;
           } else {
-            node.log( 'Reset command for device ' + rf_address + ' discarded by cube. Maybe duty cycle exceeded.' );
+            node.warn( 'Reset command for device ' + rf_address + ' discarded by cube. Maybe duty cycle exceeded.' );
             throw new Error( 'Reset command discarded.' );
           }
         } ).catch( function( e ) {
@@ -147,16 +146,13 @@ module.exports = function(RED) {
         }
         
         if( payload.reset ){
-          node.log( 'Calling resetDevice for ' + rf_address );
           return resetDevice( rf_address ).then( function( success ) {
-            node.log( 'Calling setTempFunc for ' + rf_address );
             return setTempFunc();
           } ).catch( function( err ) {
             // do nothing, everything has been done already
             // but still catch the error, because uncaught errors are bad
           } );
         } else {
-          node.log( 'Calling setTempFunc for ' + rf_address );
           return setTempFunc();
         }
       };
